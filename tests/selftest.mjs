@@ -16,7 +16,7 @@ globalThis.matchMedia=globalThis.window.matchMedia;
 try{Object.defineProperty(globalThis,'navigator',{value:{clipboard:{writeText:()=>Promise.resolve()}},configurable:true});}catch{}
 
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((a,b)=>b.length-a.length)[0];
-eval(js+`\n;globalThis.__t={breakEven,encodeState,decodeState,unitsForProfit};`);
+eval(js+`\n;globalThis.__t={breakEven,encodeState,decodeState,unitsForProfit,profitAtUnits};`);
 const t=globalThis.__t;
 
 let n=0; const check=(name,fn)=>{fn();n++;console.log('  ok -',name);};
@@ -46,6 +46,12 @@ check('unitsForProfit: (fixed+target)/contribution',()=>{
   assert.equal(t.unitsForProfit(base,5000),750);   // (10000+5000)/20
   assert.equal(t.unitsForProfit(base,0),500);       // == break-even
   assert.equal(t.unitsForProfit({...base,price:30},5000),Infinity); // cm<=0
+});
+
+check('profitAtUnits: linear, zero at break-even',()=>{
+  assert.equal(t.profitAtUnits(base,700),4000);
+  assert.equal(t.profitAtUnits(base,500),0);   // break-even
+  assert.equal(t.profitAtUnits(base,0),-10000); // = -fixed
 });
 
 console.log(`\n${n} checks passed.`);
