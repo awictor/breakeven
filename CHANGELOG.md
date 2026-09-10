@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0
+- Multi-currency — $, £, €, C$, A$ symbol selector.
+
 ## 0.3.0
 - Profit-vs-units chart — inline SVG with break-even marker and current-volume dot.
 
