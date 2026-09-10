@@ -2,7 +2,7 @@
 
 **Business break-even calculator.** Enter your fixed costs, price, and variable cost to see exactly how many units (and how much revenue) you must sell to cover costs — plus your contribution margin and margin of safety. Runs 100% in the browser, offline.
 
-![version](https://img.shields.io/badge/version-0.2.0-d97706) ![status](https://img.shields.io/badge/status-live-d97706) [![CI](https://github.com/awictor/breakeven/actions/workflows/ci.yml/badge.svg)](https://github.com/awictor/breakeven/actions/workflows/ci.yml)
+![version](https://img.shields.io/badge/version-0.3.0-d97706) ![status](https://img.shields.io/badge/status-live-d97706) [![CI](https://github.com/awictor/breakeven/actions/workflows/ci.yml/badge.svg)](https://github.com/awictor/breakeven/actions/workflows/ci.yml)
 
 ## Features
 

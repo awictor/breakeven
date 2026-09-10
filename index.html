@@ -44,6 +44,7 @@
   .stat .v{font-size:20px;font-weight:600} .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
   .pos{color:var(--good)} .neg{color:var(--bad)}
   .note{margin-top:12px;font-size:13px;color:var(--muted)}
+  #chart{width:100%;height:auto;display:block}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
   footer a{color:var(--accent-d);text-decoration:none}
 </style>
@@ -85,9 +86,17 @@
   </section>
 </div>
 
+<div style="max-width:900px;margin:0 auto;padding:0 20px 20px">
+  <section class="card">
+    <h2>Profit vs units</h2>
+    <svg id="chart" viewBox="0 0 640 220" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Profit as units sold increase, crossing zero at break-even"></svg>
+    <div id="chartNote" class="note"></div>
+  </section>
+</div>
+
 <footer>
   <b>BreakEven</b> · offline break-even calculator · <a href="https://github.com/awictor/breakeven">source</a> · <a href="https://awictor.github.io/toolkit/">part of Toolkit</a><br>
-  A planning estimate. © <span id="yr">2026</span> Alex Wictor · MIT · v0.2.0
+  A planning estimate. © <span id="yr">2026</span> Alex Wictor · MIT · v0.3.0
 </footer>
 
 <script>
@@ -107,6 +116,9 @@ function breakEven(s){
   const mosPct=(s.units>0&&isFinite(mosUnits))?mosUnits/s.units*100:0;
   return {cm,cmPct,beUnits,beRevenue,profit,mosUnits,mosPct};
 }
+
+// Profit at a given unit volume. Pure.
+function profitAtUnits(s,u){ return (s.price-s.varCost)*u - s.fixed; }
 
 // Units needed to reach a target profit: (fixed + target) / contribution margin.
 function unitsForProfit(s,targetProfit){ const cm=s.price-s.varCost; return cm>0?(s.fixed+targetProfit)/cm:Infinity; }
@@ -135,6 +147,32 @@ function calc(){
   const tu=unitsForProfit(s,tp);
   $("tgtUnits").textContent=isFinite(tu)?Math.ceil(tu).toLocaleString():"—";
   $("tgtRev").textContent=isFinite(tu)?money(tu*s.price):"—";
+  drawChart(s,r);
+}
+function drawChart(s,r){
+  const svg=$("chart"); if(!svg) return;
+  const maxU=Math.max(s.units, isFinite(r.beUnits)?r.beUnits:0, 10)*1.6;
+  const N=48, xs=[], ps=[];
+  for(let i=0;i<=N;i++){ const u=maxU*i/N; xs.push(u); ps.push(profitAtUnits(s,u)); }
+  const W=640,H=220,pL=58,pR=14,pT=14,pB=26,pw=W-pL-pR,ph=H-pT-pB;
+  let pMin=Math.min(0,...ps), pMax=Math.max(0,...ps); if(pMax===pMin) pMax=pMin+1;
+  const X=u=>pL+u/maxU*pw, Y=p=>pT+(pMax-p)/(pMax-pMin)*ph;
+  const pts=xs.map((u,i)=>X(u).toFixed(1)+","+Y(ps[i]).toFixed(1)).join(" ");
+  const y0=Y(0);
+  let g=`<rect x="${pL}" y="${pT}" width="${pw}" height="${ph}" fill="none" stroke="var(--line)"/>`;
+  g+=`<line x1="${pL}" y1="${y0.toFixed(1)}" x2="${W-pR}" y2="${y0.toFixed(1)}" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+  g+=`<text x="${pL-6}" y="${y0.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="var(--muted)">${CUR}0</text>`;
+  g+=`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  if(isFinite(r.beUnits) && r.beUnits<=maxU){ const bx=X(r.beUnits).toFixed(1);
+    g+=`<line x1="${bx}" y1="${pT}" x2="${bx}" y2="${H-pB}" stroke="var(--muted)" stroke-dasharray="3 3" opacity=".6"/>`;
+    g+=`<text x="${bx}" y="${pT+10}" text-anchor="middle" font-size="10" fill="var(--muted)">BE ${Math.ceil(r.beUnits)}</text>`; }
+  if(s.units<=maxU){ const cx=X(s.units).toFixed(1);
+    g+=`<circle cx="${cx}" cy="${Y(r.profit).toFixed(1)}" r="4" fill="var(--accent)"/>`;
+    g+=`<text x="${cx}" y="${(Y(r.profit)-8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${money(r.profit)}</text>`; }
+  g+=`<text x="${pL}" y="${H-8}" font-size="10" fill="var(--muted)">0 units</text>`;
+  g+=`<text x="${W-pR}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--muted)">${Math.round(maxU).toLocaleString()}</text>`;
+  svg.innerHTML=g;
+  $("chartNote").textContent = r.cm>0 ? "Profit turns positive once you cross the break-even line." : "";
 }
 document.querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
 $("shareBtn").onclick=()=>{ const url=location.origin+location.pathname+"#s="+encodeState(readState());
@@ -148,7 +186,7 @@ try{const tg=localStorage.getItem("breakeven.target");if(tg!=null)$("target").va
 (function(){const m=(location.hash||"").match(/[#&]s=([^&]+)/);if(!m)return;const st=decodeState(m[1]);if(st){KEYS.forEach(k=>$(k).value=st[k]);$("shareMsg").textContent="Opened from a shared link.";}})();
 calc();
 
-if(typeof module!=="undefined") module.exports={breakEven,encodeState,decodeState,unitsForProfit};
+if(typeof module!=="undefined") module.exports={breakEven,encodeState,decodeState,unitsForProfit,profitAtUnits};
 </script>
 </body>
 </html>
