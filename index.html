@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BreakEven — Business Break-Even Calculator</title>
+<meta name="description" content="Find your break-even point: units and revenue you must sell to cover costs, contribution margin, and your margin of safety. 100% offline, no signup." />
+<meta name="theme-color" content="#d97706" />
+<meta name="color-scheme" content="light dark" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="BreakEven — Business Break-Even Calculator" />
+<meta property="og:description" content="Break-even units & revenue, contribution margin, and margin of safety — in one offline screen." />
+<meta property="og:url" content="https://awictor.github.io/breakeven/" />
+<link rel="canonical" href="https://awictor.github.io/breakeven/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d97706'/%3E%3Cpath d='M14 46 L28 30 L38 38 L50 20' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14 34 L50 34' stroke='%23fff' stroke-width='3' stroke-dasharray='4 4' opacity='.7'/%3E%3C/svg%3E" />
+<style>
+  :root{ --bg:#fbf7f1; --ink:#221a10; --accent:#d97706; --accent-d:#b45309;
+    --card:#fff; --line:#ece3d5; --muted:#7a6b56; --good:#0f9d58; --bad:#e5484d; --field:#fff;
+    --shadow:0 1px 2px rgba(34,26,16,.05),0 8px 24px rgba(34,26,16,.07); }
+  [data-theme="dark"]{ --bg:#161109; --ink:#f1ece2; --accent:#f59e0b; --accent-d:#fbbf24;
+    --card:#211a10; --line:#33291a; --muted:#a3937a; --good:#34c884; --bad:#f0685c; --field:#161109;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); }
+  html[data-theme="dark"] body{background:var(--bg)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  header{padding:28px 20px 8px;text-align:center;position:relative}
+  header h1{margin:0;font-size:26px;letter-spacing:-.02em} header h1 .m{color:var(--accent)}
+  header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  #themeBtn{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:17px;cursor:pointer;box-shadow:var(--shadow)}
+  .wrap{max-width:900px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 14px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:10px 0;gap:12px}
+  .row label{font-size:14px;flex:1} .row .hint{display:block;font-size:11px;color:var(--muted)}
+  .ig{position:relative;width:130px}
+  .ig .pre{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+  input{width:100%;padding:9px 10px 9px 22px;border:1px solid var(--line);border-radius:9px;font-size:14px;text-align:right;background:var(--field);color:var(--ink)}
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,119,6,.15)}
+  .result h2{color:var(--accent)}
+  .big{font-size:40px;font-weight:700;letter-spacing:-.02em;margin:2px 0;color:var(--accent)}
+  .grid3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .stat{background:var(--bg);border-radius:10px;padding:12px;text-align:center}
+  .stat .v{font-size:20px;font-weight:600} .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .pos{color:var(--good)} .neg{color:var(--bad)}
+  .note{margin-top:12px;font-size:13px;color:var(--muted)}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
+  footer a{color:var(--accent-d);text-decoration:none}
+</style>
+<script>(function(){try{var t=localStorage.getItem("breakeven.theme")||((window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches)?"dark":"light");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+</head>
+<body>
+<header>
+  <button id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+  <h1><span class="m">Break</span>Even</h1>
+  <p>How much you must sell to cover your costs — and how much cushion you have above it. Runs 100% in your browser.</p>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Your numbers</h2>
+    <div class="row"><label>Fixed costs / month<span class="hint">rent, salaries, software</span></label><div class="ig"><span class="pre cur">$</span><input id="fixed" type="number" step="500" value="10000"></div></div>
+    <div class="row"><label>Price / unit</label><div class="ig"><span class="pre cur">$</span><input id="price" type="number" step="1" value="50"></div></div>
+    <div class="row"><label>Variable cost / unit<span class="hint">materials, per-sale fees</span></label><div class="ig"><span class="pre cur">$</span><input id="varCost" type="number" step="1" value="30"></div></div>
+    <div class="row"><label>Units sold / month<span class="hint">current or planned</span></label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="10" value="700"></div></div>
+    <div style="margin-top:14px;text-align:right"><button id="shareBtn" style="border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer">🔗 Share</button></div>
+    <div id="shareMsg" style="font-size:12px;color:var(--muted);text-align:right;margin-top:6px"></div>
+  </section>
+
+  <section class="card result">
+    <h2>Break-even</h2>
+    <div id="beUnits" class="big">— units</div>
+    <div class="grid3">
+      <div class="stat"><div id="beRev" class="v">—</div><div class="k">Break-even revenue</div></div>
+      <div class="stat"><div id="cm" class="v">—</div><div class="k">Contribution / unit</div></div>
+      <div class="stat"><div id="cmPct" class="v">—</div><div class="k">Contribution margin</div></div>
+      <div class="stat"><div id="profit" class="v">—</div><div class="k">Profit at your volume</div></div>
+      <div class="stat"><div id="mos" class="v">—</div><div class="k">Margin of safety</div></div>
+      <div class="stat"><div id="mosU" class="v">—</div><div class="k">Units of cushion</div></div>
+    </div>
+    <div id="note" class="note"></div>
+  </section>
+</div>
+
+<footer>
+  <b>BreakEven</b> · offline break-even calculator · <a href="https://github.com/awictor/breakeven">source</a> · <a href="https://awictor.github.io/toolkit/">part of Toolkit</a><br>
+  A planning estimate. © <span id="yr">2026</span> Alex Wictor · MIT · v0.1.0
+</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v;};
+let CUR="$";
+const money=n=>(n<0?"-":"")+CUR+Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
+
+// Break-even analysis. Pure.
+function breakEven(s){
+  const cm=s.price-s.varCost;
+  const cmPct=s.price>0?cm/s.price*100:0;
+  const beUnits=cm>0?s.fixed/cm:Infinity;
+  const beRevenue=isFinite(beUnits)?beUnits*s.price:Infinity;
+  const profit=cm*s.units - s.fixed;
+  const mosUnits=isFinite(beUnits)?s.units-beUnits:-Infinity;
+  const mosPct=(s.units>0&&isFinite(mosUnits))?mosUnits/s.units*100:0;
+  return {cm,cmPct,beUnits,beRevenue,profit,mosUnits,mosPct};
+}
+
+const KEYS=["fixed","price","varCost","units"];
+function readState(){const s={};KEYS.forEach(k=>s[k]=num(k));return s;}
+function encodeState(s){return btoa(unescape(encodeURIComponent(KEYS.map(k=>+(+s[k]).toFixed(4)).join("~")))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function decodeState(str){try{const p=decodeURIComponent(escape(atob(str.replace(/-/g,"+").replace(/_/g,"/")))).split("~").map(Number);if(p.length!==KEYS.length||p.some(isNaN))return null;const s={};KEYS.forEach((k,i)=>s[k]=p[i]);return s;}catch{return null;}}
+
+function calc(){
+  const s=readState(), r=breakEven(s);
+  KEYS.forEach(k=>{try{localStorage.setItem("breakeven."+k,s[k]);}catch(e){}});
+  $("beUnits").textContent=isFinite(r.beUnits)?Math.ceil(r.beUnits).toLocaleString()+" units":"never";
+  $("beRev").textContent=isFinite(r.beRevenue)?money(r.beRevenue):"—";
+  $("cm").textContent=money(r.cm);
+  $("cmPct").textContent=r.cmPct.toFixed(1)+"%";
+  const pe=$("profit"); pe.textContent=money(r.profit); pe.className="v "+(r.profit>=0?"pos":"neg");
+  const me=$("mos"); me.textContent=isFinite(r.mosPct)?r.mosPct.toFixed(0)+"%":"—"; me.className="v "+(r.mosPct>=0?"pos":"neg");
+  $("mosU").textContent=isFinite(r.mosUnits)?Math.round(r.mosUnits).toLocaleString():"—";
+  let n="";
+  if(r.cm<=0) n="Price is at or below variable cost — you lose money on every unit, so there's no break-even.";
+  else if(r.profit>=0) n=`You're ${Math.round(r.mosUnits).toLocaleString()} units (${r.mosPct.toFixed(0)}%) above break-even — sales could drop that much before you lose money.`;
+  else n=`You're ${Math.round(-r.mosUnits).toLocaleString()} units short of break-even. Reaching ${Math.ceil(r.beUnits).toLocaleString()} units/mo turns a profit.`;
+  $("note").textContent=n;
+}
+document.querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
+$("shareBtn").onclick=()=>{ const url=location.origin+location.pathname+"#s="+encodeState(readState());
+  const msg=x=>{$("shareMsg").textContent=x;};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(()=>msg("✓ Link copied."),()=>msg(url)); else msg(url); };
+$("themeBtn").onclick=()=>{const t=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem("breakeven.theme",t);}catch(e){}$("themeBtn").textContent=t==="dark"?"☀️":"🌙";};
+$("themeBtn").textContent=document.documentElement.getAttribute("data-theme")==="dark"?"☀️":"🌙";
+try{$("yr").textContent=new Date().getFullYear();}catch(e){}
+KEYS.forEach(k=>{try{const v=localStorage.getItem("breakeven."+k);if(v!=null)$(k).value=v;}catch(e){}});
+(function(){const m=(location.hash||"").match(/[#&]s=([^&]+)/);if(!m)return;const st=decodeState(m[1]);if(st){KEYS.forEach(k=>$(k).value=st[k]);$("shareMsg").textContent="Opened from a shared link.";}})();
+calc();
+
+if(typeof module!=="undefined") module.exports={breakEven,encodeState,decodeState};
+</script>
+</body>
+</html>
