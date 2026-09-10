@@ -16,7 +16,7 @@ globalThis.matchMedia=globalThis.window.matchMedia;
 try{Object.defineProperty(globalThis,'navigator',{value:{clipboard:{writeText:()=>Promise.resolve()}},configurable:true});}catch{}
 
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((a,b)=>b.length-a.length)[0];
-eval(js+`\n;globalThis.__t={breakEven,encodeState,decodeState};`);
+eval(js+`\n;globalThis.__t={breakEven,encodeState,decodeState,unitsForProfit};`);
 const t=globalThis.__t;
 
 let n=0; const check=(name,fn)=>{fn();n++;console.log('  ok -',name);};
@@ -40,6 +40,12 @@ check('breakEven: price <= variable cost -> no break-even',()=>{
 check('share codec round-trips + rejects garbage',()=>{
   assert.deepEqual(t.decodeState(t.encodeState(base)),base);
   assert.equal(t.decodeState('!!bad'),null);
+});
+
+check('unitsForProfit: (fixed+target)/contribution',()=>{
+  assert.equal(t.unitsForProfit(base,5000),750);   // (10000+5000)/20
+  assert.equal(t.unitsForProfit(base,0),500);       // == break-even
+  assert.equal(t.unitsForProfit({...base,price:30},5000),Infinity); // cm<=0
 });
 
 console.log(`\n${n} checks passed.`);
