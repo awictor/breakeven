@@ -63,6 +63,7 @@
     <div class="row"><label>Price / unit</label><div class="ig"><span class="pre cur">$</span><input id="price" type="number" step="1" value="50"></div></div>
     <div class="row"><label>Variable cost / unit<span class="hint">materials, per-sale fees</span></label><div class="ig"><span class="pre cur">$</span><input id="varCost" type="number" step="1" value="30"></div></div>
     <div class="row"><label>Units sold / month<span class="hint">current or planned</span></label><div class="ig"><span class="pre">#</span><input id="units" type="number" step="10" value="700"></div></div>
+    <div class="row"><label>Target profit / month<span class="hint">optional goal above break-even</span></label><div class="ig"><span class="pre cur">$</span><input id="target" type="number" step="500" value="5000"></div></div>
     <div style="margin-top:14px;text-align:right"><button id="shareBtn" style="border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer">🔗 Share</button></div>
     <div id="shareMsg" style="font-size:12px;color:var(--muted);text-align:right;margin-top:6px"></div>
   </section>
@@ -77,6 +78,8 @@
       <div class="stat"><div id="profit" class="v">—</div><div class="k">Profit at your volume</div></div>
       <div class="stat"><div id="mos" class="v">—</div><div class="k">Margin of safety</div></div>
       <div class="stat"><div id="mosU" class="v">—</div><div class="k">Units of cushion</div></div>
+      <div class="stat"><div id="tgtUnits" class="v">—</div><div class="k">Units for target profit</div></div>
+      <div class="stat"><div id="tgtRev" class="v">—</div><div class="k">Revenue for target</div></div>
     </div>
     <div id="note" class="note"></div>
   </section>
@@ -84,7 +87,7 @@
 
 <footer>
   <b>BreakEven</b> · offline break-even calculator · <a href="https://github.com/awictor/breakeven">source</a> · <a href="https://awictor.github.io/toolkit/">part of Toolkit</a><br>
-  A planning estimate. © <span id="yr">2026</span> Alex Wictor · MIT · v0.1.0
+  A planning estimate. © <span id="yr">2026</span> Alex Wictor · MIT · v0.2.0
 </footer>
 
 <script>
@@ -104,6 +107,9 @@ function breakEven(s){
   const mosPct=(s.units>0&&isFinite(mosUnits))?mosUnits/s.units*100:0;
   return {cm,cmPct,beUnits,beRevenue,profit,mosUnits,mosPct};
 }
+
+// Units needed to reach a target profit: (fixed + target) / contribution margin.
+function unitsForProfit(s,targetProfit){ const cm=s.price-s.varCost; return cm>0?(s.fixed+targetProfit)/cm:Infinity; }
 
 const KEYS=["fixed","price","varCost","units"];
 function readState(){const s={};KEYS.forEach(k=>s[k]=num(k));return s;}
@@ -125,6 +131,10 @@ function calc(){
   else if(r.profit>=0) n=`You're ${Math.round(r.mosUnits).toLocaleString()} units (${r.mosPct.toFixed(0)}%) above break-even — sales could drop that much before you lose money.`;
   else n=`You're ${Math.round(-r.mosUnits).toLocaleString()} units short of break-even. Reaching ${Math.ceil(r.beUnits).toLocaleString()} units/mo turns a profit.`;
   $("note").textContent=n;
+  const tp=num("target"); try{localStorage.setItem("breakeven.target",tp);}catch(e){}
+  const tu=unitsForProfit(s,tp);
+  $("tgtUnits").textContent=isFinite(tu)?Math.ceil(tu).toLocaleString():"—";
+  $("tgtRev").textContent=isFinite(tu)?money(tu*s.price):"—";
 }
 document.querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
 $("shareBtn").onclick=()=>{ const url=location.origin+location.pathname+"#s="+encodeState(readState());
@@ -134,10 +144,11 @@ $("themeBtn").onclick=()=>{const t=document.documentElement.getAttribute("data-t
 $("themeBtn").textContent=document.documentElement.getAttribute("data-theme")==="dark"?"☀️":"🌙";
 try{$("yr").textContent=new Date().getFullYear();}catch(e){}
 KEYS.forEach(k=>{try{const v=localStorage.getItem("breakeven."+k);if(v!=null)$(k).value=v;}catch(e){}});
+try{const tg=localStorage.getItem("breakeven.target");if(tg!=null)$("target").value=tg;}catch(e){}
 (function(){const m=(location.hash||"").match(/[#&]s=([^&]+)/);if(!m)return;const st=decodeState(m[1]);if(st){KEYS.forEach(k=>$(k).value=st[k]);$("shareMsg").textContent="Opened from a shared link.";}})();
 calc();
 
-if(typeof module!=="undefined") module.exports={breakEven,encodeState,decodeState};
+if(typeof module!=="undefined") module.exports={breakEven,encodeState,decodeState,unitsForProfit};
 </script>
 </body>
 </html>
